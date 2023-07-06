@@ -1,0 +1,76 @@
+{
+  "kind": "collectionType",
+  "collectionName": "orders",
+  "info": {
+    "singularName": "order",
+    "pluralName": "orders",
+    "displayName": "Order",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "ordered_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "orders"
+    },
+    "isReceivedByUser": {
+      "type": "boolean",
+      "default": false
+    },
+    "isDeliveredByBreeder": {
+      "type": "boolean",
+      "default": false
+    },
+    "breeder": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::breeder.breeder"
+    },
+    "itemDescription": {
+      "type": "string"
+    },
+    "animal": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::animal.animal"
+    },
+    "paymentStatus": {
+      "type": "enumeration",
+      "enum": [
+        "PENDING",
+        "COMPLETED"
+      ],
+      "default": "PENDING"
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "PENDING",
+        "CANCELLED",
+        "IN_TRANSIT",
+        "DELIVERED"
+      ],
+      "default": "PENDING"
+    },
+    "addressCity": {
+      "type": "string"
+    },
+    "addressUnitNumber": {
+      "type": "string"
+    },
+    "addressState": {
+      "type": "string"
+    },
+    "addressPostalCode": {
+      "type": "string"
+    },
+    "addressLine1": {
+      "type": "string"
+    }
+  }
+}

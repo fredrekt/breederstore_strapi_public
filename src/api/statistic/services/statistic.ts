@@ -1,0 +1,5 @@
+/**
+ * statistic service
+ */
+
+export default () => ({});
