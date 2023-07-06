@@ -19,7 +19,7 @@ export default [
     config: {
       enabled: true,
       headers: '*',
-      origin: ['http://localhost:1337', 'http://localhost:3007']
+      origin: ['https://incredible-cherry-bf4919b2b8.strapiapp.com', 'http://localhost:3007']
     }
   },
   'strapi::poweredBy',
