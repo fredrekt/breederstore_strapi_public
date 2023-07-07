@@ -19,7 +19,7 @@ module.exports = factories.createCoreController('api::order.order',
                     ordered_by: ctx.state.user.id,
                     status: status['$eq'] === 'All' ? 'PENDING' : status['$eq']
                 },
-                populate: ['breeder', 'animal']
+                populate: ['breeder', 'animal', 'animal.images', 'breeder.avatar']
             });
         } else {
             const { breeder } = await strapi.entityService.findOne(
@@ -36,7 +36,7 @@ module.exports = factories.createCoreController('api::order.order',
                     breeder: breeder.id,
                     status: status['$eq'] === 'All' ? 'PENDING' : status['$eq']
                 },
-                populate: ['breeder', 'animal', 'ordered_by']
+                populate: ['breeder', 'animal', 'ordered_by', 'animal.images', 'breeder.avatar']
             });
         }
 

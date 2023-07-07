@@ -34,6 +34,7 @@ module.exports = factories.createCoreController(
             },
           ],
         },
+        populate: ['breeder', 'images', 'categories']
       });
 
       return listing;
