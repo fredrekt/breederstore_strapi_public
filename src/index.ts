@@ -62,13 +62,20 @@ export default {
               },
             }
           );
-          strapi.log.info(`message creation data: ${JSON.stringify(message)}`)
-          io.to(strapiData.data.conversation).emit("newMessage", {
-            sender: strapiData.data.sender,
-            message: strapiData.data.message,
-            conversation: data.conversation,
-            updatedAt: new Date().toISOString(),
+          strapi.log.info(`message creation data: ${JSON.stringify(message)}`);
+          const senderData = await strapi.entityService.findOne('plugin::users-permissions.user', strapiData.data.sender, {
+            populate: {
+              avatar: true
+            }
           });
+          if (senderData) {
+            io.to(strapiData.data.conversation).emit("newMessage", {
+              sender: senderData,
+              message: strapiData.data.message,
+              conversation: data.conversation,
+              updatedAt: new Date().toISOString(),
+            });
+          }
         }
       });
 
