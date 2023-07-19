@@ -16,10 +16,10 @@ export default {
    */
   bootstrap(/*{ strapi }*/) {
     //strapi.server.httpServer is the new update for Strapi V4
-    var io = require("socket.io")(strapi.server.httpServer, {
+    const io = require("socket.io")(strapi.server.httpServer, {
       cors: {
         // cors setup
-        origin: "http://localhost:3007",
+        origin: "*",
         methods: ["GET", "POST"],
         allowedHeaders: ["my-custom-header"],
         credentials: true,
@@ -27,43 +27,59 @@ export default {
     });
     io.on("connection", function (socket) {
       //Listening for a connection from the frontend
-      socket.on("join", ({ username }) => {
-        // Listening for a join connection
-        console.log("user connected");
-        console.log("username is ", username);
-        if (username) {
-          socket.join("group"); // Adding the user to the group
-          socket.emit("welcome", {
-            // Sending a welcome message to the User
-            user: "bot",
-            text: `${username}, Welcome to the group chat`,
-            userData: username,
-          });
-        } else {
-          console.log("An error occurred");
-        }
-      });
+
+      // Handle socket connection events here
+      console.log("New client connected");
+      socket.emit("welcome", "Welcome to the Socket.io server!");
+
       socket.on("sendMessage", async (data) => {
         // Listening for a sendMessage connection
         let strapiData = {
           // Generating the message data to be stored in Strapi
           data: {
-            user: data.user,
+            sender: data.sender,
+            conversation: data.conversation,
             message: data.message,
           },
         };
-        var axios = require("axios");
-        await axios
-          .post("http://localhost:1337/api/messages", strapiData) //Storing the messages in Strapi
-          .then((e) => {
-            socket.broadcast.to("group").emit("message", {
-              //Sending the message to the group
-              user: data.username,
-              text: data.message,
-            });
-          })
-          .catch((e) => console.log("error", e.message));
+        strapi.log.info(`message request: ${JSON.stringify(strapiData)}`);
+        const message = await strapi.entityService.create(
+          "api::message.message",
+          {
+            data: {
+              ...strapiData.data,
+              publishedAt: new Date().toISOString(),
+            },
+          }
+        );
+        if (message) {
+          await strapi.entityService.update(
+            "api::conversation.conversation",
+            strapiData.data.conversation,
+            {
+              data: {
+                updatedAt: new Date().toISOString(),
+              },
+            }
+          );
+          strapi.log.info(`message creation data: ${JSON.stringify(message)}`)
+          io.to(strapiData.data.conversation).emit("newMessage", {
+            sender: strapiData.data.sender,
+            message: strapiData.data.message,
+            conversation: data.conversation,
+            updatedAt: new Date().toISOString(),
+          });
+        }
       });
+
+      socket.on('joinConversation', (conversationId) => {
+        socket.join(conversationId);
+      });
+  
+      socket.on('leaveConversation', (conversationId) => {
+        socket.leave(conversationId);
+      });
+
     });
   },
 };
