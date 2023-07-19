@@ -46,7 +46,7 @@ module.exports = factories.createCoreController('api::conversation.conversation'
                 },
                 populate: ['receiver', 'messages', 'receiver.breeder', 'messages.sender', 'messages.sender.avatar', 'receiver.breeder.avatar'],
                 orderBy: {
-                    id: 'desc'
+                    updatedAt: 'desc'
                 }
             });
         } else {
@@ -54,9 +54,9 @@ module.exports = factories.createCoreController('api::conversation.conversation'
                 where: {
                     receiver: userRequest.id
                 },
-                populate: ['sender', 'messages', 'receiver', 'messages.sender', 'messages.sender.avatar', 'receiver.breeder.avatar'],
+                populate: ['sender', 'messages', 'receiver', 'messages.sender', 'messages.sender.avatar', 'receiver.breeder.avatar', 'sender.avatar'],
                 orderBy: {
-                    id: 'desc'
+                    updatedAt: 'desc'
                 }
             });
         }

@@ -4,7 +4,8 @@
   "info": {
     "singularName": "document",
     "pluralName": "documents",
-    "displayName": "Document"
+    "displayName": "Document",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -16,11 +17,18 @@
       "required": true
     },
     "fileUrl": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "files"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
+    },
+    "animal": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::animal.animal",
+      "inversedBy": "documents"
     }
   }
 }

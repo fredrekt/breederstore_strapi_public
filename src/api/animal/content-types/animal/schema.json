@@ -44,6 +44,12 @@
       "relation": "manyToMany",
       "target": "api::category.category",
       "inversedBy": "animals"
+    },
+    "documents": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::document.document",
+      "mappedBy": "animal"
     }
   }
 }
