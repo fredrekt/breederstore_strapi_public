@@ -69,12 +69,38 @@ export default {
             }
           });
           if (senderData) {
-            io.to(strapiData.data.conversation).emit("newMessage", {
+            const socketMessage = io.to(strapiData.data.conversation).emit("newMessage", {
               sender: senderData,
               message: strapiData.data.message,
               conversation: data.conversation,
               updatedAt: new Date().toISOString(),
             });
+            if (socketMessage) {
+              const { receiver } = await strapi.entityService.findOne('api::conversation.conversation', data.conversation, {
+                populate: {
+                  receiver: true
+                }
+              });
+              if (receiver) {
+                const notification = await strapi.entityService.create(
+                  "api::notification.notification",
+                  {
+                    data: {
+                      message: `You have received a message from ${senderData.username}.`,
+                      type: 'message',
+                      user: receiver,
+                      publishedAt: new Date().toISOString(),
+                    },
+                  }
+                );
+                if (notification) {
+                  io.emit('newNotification', {
+                    ...notification
+                  })
+                }
+              }
+              strapi.log.info(`Emitting socket message. ${JSON.stringify(receiver)}`)
+            }
           }
         }
       });

@@ -98,6 +98,12 @@
       ],
       "type": "media",
       "multiple": false
+    },
+    "notifications": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::notification.notification",
+      "mappedBy": "user"
     }
   }
 }
