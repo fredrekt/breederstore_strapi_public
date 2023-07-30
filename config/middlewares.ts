@@ -19,7 +19,7 @@ export default [
     config: {
       enabled: true,
       headers: '*',
-      origin: ['https://mybreedersstore-backend-d8d923592f33.herokuapp.com', 'https://stg-breederstore.netlify.app']
+      origin: ['https://mybreedersstore-backend-d8d923592f33.herokuapp.com', 'https://stg-breederstore.netlify.app', 'https://mybreedersstore.com']
     }
   },
   'strapi::poweredBy',
