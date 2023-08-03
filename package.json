@@ -23,7 +23,8 @@
     "pg-connection-string": "^2.6.1",
     "socket.io": "^4.7.1",
     "strapi-plugin-populate-deep": "^2.0.0",
-    "strapi-plugin-transformer": "^3.1.0"
+    "strapi-plugin-transformer": "^3.1.0",
+    "strapi-stripe": "^3.4.1"
   },
   "author": {
     "name": "A Strapi developer"
