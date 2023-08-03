@@ -13,7 +13,8 @@ module.exports = factories.createCoreController('api::notification.notification'
         notifications = await strapi.db.query('api::notification.notification').findMany({
             where: {
                 user: ctx.state.user.id
-            }
+            },
+            populate: ['user']
         })
         return notifications;
     }

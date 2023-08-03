@@ -50,6 +50,18 @@
       "relation": "oneToMany",
       "target": "api::document.document",
       "mappedBy": "animal"
+    },
+    "stripeProductId": {
+      "type": "string"
+    },
+    "stripePaymentLink": {
+      "type": "string"
+    },
+    "stripeProductJSON": {
+      "type": "json"
+    },
+    "stripePaymentLinkJSON": {
+      "type": "json"
     }
   }
 }

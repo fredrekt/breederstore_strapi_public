@@ -54,73 +54,75 @@ module.exports = factories.createCoreController(
       return listing;
     },
     create: async (ctx, next) => {
-    //   const io = require("socket.io")(strapi.server.httpServer, {
-    //     cors: {
-    //       // cors setup
-    //       origin: "*",
-    //       methods: ["GET", "POST"],
-    //       allowedHeaders: ["my-custom-header"],
-    //       credentials: true,
-    //     },
-    //   });
+      //   const io = require("socket.io")(strapi.server.httpServer, {
+      //     cors: {
+      //       // cors setup
+      //       origin: "*",
+      //       methods: ["GET", "POST"],
+      //       allowedHeaders: ["my-custom-header"],
+      //       credentials: true,
+      //     },
+      //   });
 
-    // io.on("connection", async function (socket) {
-    //     const notification = await strapi.entityService.create(
-    //       "api::notification.notification",
-    //       {
-    //         data: {
-    //           message: `You have received an order from ${ctx.state.user.username}.`,
-    //           type: "order",
-    //           user: 51,
-    //           publishedAt: new Date().toISOString(),
-    //         },
-    //       }
-    //     );
-    //     if (notification) {
-    //       io.emit("newNotification", {
-    //         ...notification,
-    //       });
-    //       return await strapi.entityService.create("api::order.order", {
-    //         data: {
-    //           ...ctx.request.body.data,
-    //           publishedAt: new Date().toISOString(),
-    //         },
-    //       });
-    //     }
-    //   });
+      // io.on("connection", async function (socket) {
+      //     const notification = await strapi.entityService.create(
+      //       "api::notification.notification",
+      //       {
+      //         data: {
+      //           message: `You have received an order from ${ctx.state.user.username}.`,
+      //           type: "order",
+      //           user: 51,
+      //           publishedAt: new Date().toISOString(),
+      //         },
+      //       }
+      //     );
+      //     if (notification) {
+      //       io.emit("newNotification", {
+      //         ...notification,
+      //       });
+      //       return await strapi.entityService.create("api::order.order", {
+      //         data: {
+      //           ...ctx.request.body.data,
+      //           publishedAt: new Date().toISOString(),
+      //         },
+      //       });
+      //     }
+      //   });
 
-
-    const { user }  = await strapi.entityService.findOne(
+      const { user } = await strapi.entityService.findOne(
         "api::breeder.breeder",
         ctx.request.body.data.breeder,
         {
           fields: ["id"],
           populate: { user: true },
         }
-    );
-    
-    strapi.log.info(`user breeder: ${JSON.stringify(user)}`);
-    if (user) {
-        // manually create notification for order placed
-        await strapi.entityService.create(
-            "api::notification.notification",
-            {
-            data: {
-                message: `You have received an order from ${ctx.state.user.username}.`,
-                type: "order",
-                user: user,
-                publishedAt: new Date().toISOString(),
-            },
-            }
-        );
-    }
-    return await strapi.entityService.create("api::order.order", {
-        data: {
-          ...ctx.request.body.data,
-          publishedAt: new Date().toISOString(),
-        },
-    });
+      );
 
+      const animal = await strapi.entityService.findOne(
+        "api::animal.animal",
+        ctx.request.body.data.animal
+      );
+
+      strapi.log.info(`user breeder: ${JSON.stringify(user)}`);
+      if (user) {
+        // manually create notification for order placed
+        await strapi.entityService.create("api::notification.notification", {
+          data: {
+            message: `You have received an order from ${ctx.state.user.username}.`,
+            type: "order",
+            user: user,
+            publishedAt: new Date().toISOString(),
+          },
+        });
+      }
+      if (animal) {
+        return await strapi.entityService.create("api::order.order", {
+          data: {
+            ...ctx.request.body.data,
+            publishedAt: new Date().toISOString(),
+          },
+        });
+      }
     },
   })
 );

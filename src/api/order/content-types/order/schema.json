@@ -71,6 +71,9 @@
     },
     "addressLine1": {
       "type": "string"
+    },
+    "phoneNumber": {
+      "type": "string"
     }
   }
 }
