@@ -8,6 +8,12 @@ const stripe = require("stripe")(
 );
 export default factories.createCoreController("api::animal.animal");
 
+const convertDecimalToCents = (decimalValue) => {
+  const centsValue = decimalValue * 100;
+  const roundedCents = Math.round(centsValue);
+  return roundedCents;
+};
+
 module.exports = factories.createCoreController(
   "api::animal.animal",
   ({ strapi }) => ({
@@ -18,7 +24,9 @@ module.exports = factories.createCoreController(
         name: ctx.request.body.data.name,
         default_price_data: {
           currency: "AUD",
-          unit_amount_decimal: ctx.request.body.data.price,
+          unit_amount_decimal: convertDecimalToCents(
+            ctx.request.body.data.price
+          ),
         },
         description: ctx.request.body.data.bio,
       });
