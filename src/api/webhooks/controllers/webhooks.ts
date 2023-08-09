@@ -9,7 +9,7 @@ const unparsed = require("koa-body/unparsed.js");
 export default {
   stripeWebhook: async (ctx, next) => {
     try {
-      const event = stripe.webhooks.constructEvent(
+      const event = await stripe.webhooks.constructEvent(
         ctx.request.body[unparsed],
         ctx.request.headers['stripe-signature'],
         process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET
@@ -31,11 +31,13 @@ export default {
               credentials: true,
             },
           });
-          io.emit("checkoutSuccessful", {
-            email: clientEmail,
-            message: "Stripe checkout payment successful",
-            data: event.data.object
-          });
+          io.on('connection', (socket) => {
+            socket.emit("checkoutSuccessful", {
+              email: clientEmail,
+              message: "Stripe checkout payment successful",
+              data: event.data
+            });
+          })
         }
       }
       ctx.send({ received: true }); // Send a response to Stripe
