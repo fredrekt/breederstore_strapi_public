@@ -93,17 +93,22 @@
       "mappedBy": "user"
     },
     "avatar": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
       "allowedTypes": [
         "images"
-      ],
-      "type": "media",
-      "multiple": false
+      ]
     },
     "notifications": {
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::notification.notification",
       "mappedBy": "user"
+    },
+    "isSubscribed": {
+      "type": "boolean",
+      "default": false
     }
   }
 }
