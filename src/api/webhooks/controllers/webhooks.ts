@@ -62,7 +62,7 @@ module.exports = {
       //     credentials: true,
       //   },
       // });
-
+      strapi.log.info('hehe')
       // stripe construct event
       const event = await stripe.webhooks.constructEvent(
         ctx.request.body[unparsed],
