@@ -45,7 +45,7 @@ module.exports = factories.createCoreController(
         const accountLink = await stripe.accountLinks.create({
           account: currentUser.stripeAccountId,
           refresh_url: "https://example.com/reauth",
-          return_url: "https://example.com/return",
+          return_url: `${process.env.CLIENT_URL}/stripe/success`,
           type: "account_onboarding",
         });
         const updateQuery = {
