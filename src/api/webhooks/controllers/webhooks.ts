@@ -53,15 +53,15 @@ const createStripePaymentLog = async (accountId: string, paymentData: any, custo
 module.exports = {
   stripeWebhook: async (ctx) => {
     try {
-      // socket io instance creation
-      const io = require("socket.io")(strapi.server.httpServer, {
-        cors: {
-          origin: "*",
-          methods: ["GET", "POST"],
-          allowedHeaders: ["my-custom-header"],
-          credentials: true,
-        },
-      });
+      // // socket io instance creation
+      // const io = require("socket.io")(strapi.server.httpServer, {
+      //   cors: {
+      //     origin: "*",
+      //     methods: ["GET", "POST"],
+      //     allowedHeaders: ["my-custom-header"],
+      //     credentials: true,
+      //   },
+      // });
 
       // stripe construct event
       const event = await stripe.webhooks.constructEvent(
@@ -84,7 +84,7 @@ module.exports = {
               data: event.data.object,
             };
 
-            io.emit("useCheckoutStripeSuccess", eventData);
+            // io.emit("useCheckoutStripeSuccess", eventData);
 
             await createStripePaymentLog(event.account, event.data.object, clientEmail);
 
