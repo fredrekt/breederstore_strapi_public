@@ -10,7 +10,7 @@ export default ({ env }) => ({
     populateRelations: env.bool('WEBHOOKS_POPULATE_RELATIONS', false),
   },
   cron: {
-    enabled: true,
+    enabled: false,
     tasks: cronTasks,
   },
 });
