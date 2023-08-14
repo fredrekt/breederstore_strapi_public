@@ -109,6 +109,18 @@
     "isSubscribed": {
       "type": "boolean",
       "default": false
+    },
+    "stripeAccountId": {
+      "type": "string"
+    },
+    "stripeAccountJSON": {
+      "type": "json"
+    },
+    "stripeAccountLink": {
+      "type": "string"
+    },
+    "stripeAccountLinkJSON": {
+      "type": "json"
     }
   }
 }

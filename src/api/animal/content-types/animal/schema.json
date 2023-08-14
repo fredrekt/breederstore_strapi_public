@@ -62,6 +62,13 @@
     },
     "stripePaymentLinkJSON": {
       "type": "json"
+    },
+    "isDeleted": {
+      "type": "boolean",
+      "default": false
+    },
+    "stripePaymentLinkId": {
+      "type": "string"
     }
   }
 }

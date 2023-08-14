@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payment_logs",
+  "info": {
+    "singularName": "payment-log",
+    "pluralName": "payment-logs",
+    "displayName": "Payment Log",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "type": {
+      "type": "enumeration",
+      "enum": [
+        "order",
+        "registration"
+      ]
+    },
+    "stripePaymentIntentId": {
+      "type": "string"
+    },
+    "stripePaymentLinkId": {
+      "type": "string"
+    },
+    "stripePaymentJSON": {
+      "type": "json"
+    },
+    "stripeAccountId": {
+      "type": "string"
+    },
+    "userCustomer": {
+      "type": "json"
+    },
+    "userCustomerId": {
+      "type": "biginteger"
+    }
+  }
+}

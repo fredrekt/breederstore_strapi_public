@@ -3,7 +3,9 @@
  */
 
 import { factories } from "@strapi/strapi";
-
+const stripe = require("stripe")(
+  process.env.STRAPI_ADMIN_TEST_STRIPE_SECRET_KEY
+);
 export default factories.createCoreController("api::order.order");
 
 module.exports = factories.createCoreController(
@@ -115,6 +117,21 @@ module.exports = factories.createCoreController(
           },
         });
       }
+
+      // if payment success
+      if (ctx.request.body.data.paymentStatus === 'COMPLETED') {
+        await strapi.entityService.update(
+          "api::animal.animal",
+          animal.id,
+          {
+            data: {
+              publishedAt: new Date().toISOString(),
+              isDeleted: true
+            }
+          }
+        )
+      }
+
       if (animal) {
         return await strapi.entityService.create("api::order.order", {
           data: {
@@ -124,5 +141,74 @@ module.exports = factories.createCoreController(
         });
       }
     },
+    update: async (ctx, next) => {
+      strapi.log.info(`updating order`);
+      const updateOrder = await strapi.entityService.update(
+        "api::order.order",
+        ctx.params.id,
+        {
+          data: {
+            ...ctx.request.body.data,
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      );
+
+      const order = await strapi.entityService.findOne("api::order.order", ctx.params.id, {
+        populate: ["breeder", "animal"],
+      });
+
+      const orderStatus: string = ctx.request.body.data.status;
+
+      strapi.log.info(`order status: ${orderStatus}`);
+
+      switch (orderStatus) {
+        case "CANCELLED":
+          // refund
+          strapi.log.info(`start refund here. ${JSON.stringify(order)}`);
+          if (order.stripePaymentIntentId) {
+            await stripe.refunds.create({
+              payment_intent: order.stripePaymentIntentId,
+            });
+          }
+          break;
+        case "DELIVERED":
+          // delivered & remove from listing
+          if (ctx.request.body.data.isDeliveredByBreeder && order.animal) {
+            strapi.log.info(`marking delivered: ${JSON.stringify(order.animal)}`)
+            await strapi.entityService.update(
+              "api::animal.animal",
+              order.animal.id,
+              {
+                data: {
+                  publishedAt: new Date().toISOString(),
+                  isDeleted: true
+                }
+              }
+            )
+          }
+          break;
+        case "IN_TRANSIT":
+            // in transit & remove from listing
+            if (order.animal) {
+              strapi.log.info(`marking in transit/on delivery: ${JSON.stringify(order.animal)}`)
+              await strapi.entityService.update(
+                "api::animal.animal",
+                order.animal.id,
+                {
+                  data: {
+                    publishedAt: new Date().toISOString(),
+                    isDeleted: true
+                  }
+                }
+              )
+            }
+          break;
+        default:
+          break;
+      }
+
+      return updateOrder;
+    }
   })
 );

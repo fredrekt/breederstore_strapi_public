@@ -74,6 +74,9 @@
     },
     "phoneNumber": {
       "type": "string"
+    },
+    "stripePaymentIntentId": {
+      "type": "string"
     }
   }
 }

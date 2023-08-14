@@ -19,26 +19,43 @@ module.exports = factories.createCoreController(
   ({ strapi }) => ({
     create: async (ctx, next) => {
       strapi.log.info(JSON.stringify(ctx.request.body.data));
+
+      // allow only stripe connected accounts setup successfully
+      strapi.log.info(
+        `breeder stripe account id: ${ctx.state.user.stripeAccountId}`
+      );
+      if (!ctx.state.user.stripeAccountId) return;
+
       // create stripe product
-      const createStripeProduct = await stripe.products.create({
-        name: ctx.request.body.data.name,
-        default_price_data: {
-          currency: "AUD",
-          unit_amount_decimal: convertDecimalToCents(
-            ctx.request.body.data.price
-          ),
-        },
-        description: ctx.request.body.data.bio,
-      });
-      // create stripe payment link
-      const paymentLink = await stripe.paymentLinks.create({
-        line_items: [
-          {
-            price: createStripeProduct.default_price,
-            quantity: 1,
+      const createStripeProduct = await stripe.products.create(
+        {
+          name: ctx.request.body.data.name,
+          default_price_data: {
+            currency: "AUD",
+            unit_amount_decimal: convertDecimalToCents(
+              ctx.request.body.data.price
+            ),
           },
-        ],
-      });
+          description: ctx.request.body.data.bio,
+        },
+        {
+          stripeAccount: ctx.state.user.stripeAccountId,
+        }
+      );
+      // create stripe payment link
+      const paymentLink = await stripe.paymentLinks.create(
+        {
+          line_items: [
+            {
+              price: createStripeProduct.default_price,
+              quantity: 1,
+            },
+          ],
+        },
+        {
+          stripeAccount: ctx.state.user.stripeAccountId,
+        }
+      );
       const animal = await strapi.entityService.create("api::animal.animal", {
         data: {
           ...ctx.request.body.data,
@@ -48,6 +65,7 @@ module.exports = factories.createCoreController(
           stripePaymentLink: paymentLink.url,
           stripeProductJSON: createStripeProduct,
           stripePaymentLinkJSON: paymentLink,
+          stripePaymentLinkId: paymentLink.id
         },
       });
       return animal;
@@ -100,16 +118,19 @@ module.exports = factories.createCoreController(
           },
         }
       );
-      if (currentProduct.stripeProductId) {
+      if (currentProduct.stripeProductId && ctx.state.user.stripeAccountId) {
         let updateData: any = {};
         updateData.description = currentProduct.bio;
         updateData.name = currentProduct.name;
         if (Array.isArray(currentProduct.images) && currentProduct.images) {
           updateData.images = currentProduct.images.map((data) => data.url);
         }
-        const product = await stripe.products.update(
+        await stripe.products.update(
           currentProduct.stripeProductId,
-          updateData
+          updateData,
+          {
+            stripeAccount: ctx.state.user.stripeAccountId,
+          }
         );
       }
       return updateProduct;
@@ -128,15 +149,25 @@ module.exports = factories.createCoreController(
       );
       if (
         currentProduct.stripeProductId &&
-        currentProduct.stripePaymentLinkJSON
+        currentProduct.stripePaymentLinkJSON &&
+        ctx.state.user.stripeAccountId
       ) {
-        await stripe.products.update(currentProduct.stripeProductId, {
-          active: false,
-        });
+        await stripe.products.update(
+          currentProduct.stripeProductId,
+          {
+            active: false,
+          },
+          {
+            stripeAccount: ctx.state.user.stripeAccountId,
+          }
+        );
         await stripe.paymentLinks.update(
           currentProduct.stripePaymentLinkJSON.id,
           {
             active: false,
+          },
+          {
+            stripeAccount: ctx.state.user.stripeAccountId,
           }
         );
       }
