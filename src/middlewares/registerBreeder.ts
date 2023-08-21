@@ -6,6 +6,7 @@ module.exports = () => {
       ctx.request.url === "/api/auth/local/register?breeder=true" &&
       ctx.response.status === 200
     ) {
+      const user = ctx.response.body.user;
       const userId = ctx.response.body.user.id;
       const registryName = ctx.request.body.registryName;
       const prefix = ctx.request.body.prefix;
@@ -28,12 +29,18 @@ module.exports = () => {
           },
           data: {
             publishedAt: new Date().toISOString(),
-            breeder: createBreeder.id
+            breeder: createBreeder.id,
           },
         };
         await strapi.db
           .query("plugin::users-permissions.user")
           .update(updateQuery);
+        strapi.log.info(`creating breeder: ${createBreeder.id}`);
+        // Include breeder in the user object
+        user.breeder = createBreeder.id;
+
+        // Update the response body with the modified user object
+        ctx.response.body.user = user;
       }
     }
     if (
