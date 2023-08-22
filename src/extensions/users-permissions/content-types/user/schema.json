@@ -121,6 +121,12 @@
     },
     "stripeAccountLinkJSON": {
       "type": "json"
+    },
+    "stripeCustomerId": {
+      "type": "string"
+    },
+    "stripeSubscriptionId": {
+      "type": "string"
     }
   }
 }
