@@ -93,14 +93,58 @@ module.exports = {
         },
       });
 
-      // stripe construct event
+      // stripe construct event connected accounts
+      const connectedEvent = await stripe.webhooks.constructEvent(
+        ctx.request.body[unparsed],
+        ctx.request.headers["stripe-signature"],
+        process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET_CONNECTED_ACCOUNTS
+      );
+
+      // handle stripe events
+      switch (connectedEvent.type) {
+        case "checkout.session.completed":
+          strapi.log.info(
+            `stripe webhook event data: ${JSON.stringify(connectedEvent)}`
+          );
+          const clientEmail = connectedEvent.data.object.customer_details.email;
+          if (clientEmail && connectedEvent.data.object) {
+            const eventData = {
+              email: clientEmail,
+              message: "Stripe checkout payment successful",
+              data: connectedEvent.data.object,
+            };
+
+            io.emit("useCheckoutStripeSuccess", eventData);
+
+            await createStripePaymentLog(connectedEvent.account, connectedEvent.data.object, clientEmail);
+
+            // stripe payment breeder subscription
+            if (eventData.data.payment_link === process.env.BREEDER_SUBSCRIPTION_PLINK) {
+              strapi.log.info(`stripe breeder subscription`);
+              const { subscription, payment_status, customer } = connectedEvent.data.object
+              if (!subscription || !payment_status || !customer) return;
+              await processBreederSubscription(clientEmail, payment_status, subscription, customer);
+            }
+
+            strapi.log.info(
+              `Emitting stripePaymentSuccess event: ${JSON.stringify(
+                eventData
+              )}`
+            );
+          }
+          break;
+
+        default:
+          break;
+      }
+
+      // stripe construct event accounts
       const event = await stripe.webhooks.constructEvent(
         ctx.request.body[unparsed],
         ctx.request.headers["stripe-signature"],
         process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET
       );
 
-      // handle stripe events
       switch (event.type) {
         case "checkout.session.completed":
           strapi.log.info(
@@ -113,10 +157,6 @@ module.exports = {
               message: "Stripe checkout payment successful",
               data: event.data.object,
             };
-
-            io.emit("useCheckoutStripeSuccess", eventData);
-
-            await createStripePaymentLog(event.account, event.data.object, clientEmail);
 
             // stripe payment breeder subscription
             if (eventData.data.payment_link === process.env.BREEDER_SUBSCRIPTION_PLINK) {
