@@ -9,5 +9,14 @@ export default {
        middlewares: [],
      },
     },
+    {
+      method: 'POST',
+      path: '/webhooks/stripe/connected',
+      handler: 'webhooks.stripeWebhookConnectedAccounts',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+     },
   ],
 };
