@@ -4,63 +4,75 @@ const stripe = require("stripe")(
 const unparsed = require("koa-body/unparsed.js");
 
 // order payment workflow
-const createStripePaymentLog = async (accountId: string, paymentData: any, customerEmail: string) => {
+const createStripePaymentLog = async (
+  accountId: string,
+  paymentData: any,
+  customerEmail: string
+) => {
   if (!accountId || !paymentData || !customerEmail) return;
-  const currentUser = await strapi.db.query("plugin::users-permissions.user").findOne({
-    where: {
-      email: customerEmail
-    }
-  });
+  const currentUser = await strapi.db
+    .query("plugin::users-permissions.user")
+    .findOne({
+      where: {
+        email: customerEmail,
+      },
+    });
   if (!currentUser) return;
-  const createPaymentLog = await strapi.entityService.create("api::payment-log.payment-log", {
-    data: {
-      type: "order",
-      stripePaymentIntentId: paymentData.payment_intent,
-      stripePaymentLinkId: paymentData.payment_link,
-      stripePaymentJSON: paymentData,
-      stripeAccountId: accountId,
-      userCustomer: currentUser,
-      userCustomerId: currentUser.id,
-      publishedAt: new Date().toISOString(),
+  const createPaymentLog = await strapi.entityService.create(
+    "api::payment-log.payment-log",
+    {
+      data: {
+        type: "order",
+        stripePaymentIntentId: paymentData.payment_intent,
+        stripePaymentLinkId: paymentData.payment_link,
+        stripePaymentJSON: paymentData,
+        stripeAccountId: accountId,
+        userCustomer: currentUser,
+        userCustomerId: currentUser.id,
+        publishedAt: new Date().toISOString(),
+      },
     }
-  });
+  );
   if (createPaymentLog) {
     const animal = await strapi.db.query("api::animal.animal").findOne({
       where: {
-        stripePaymentLinkId: paymentData.payment_link
+        stripePaymentLinkId: paymentData.payment_link,
       },
-      populate: ['breeder']
+      populate: ["breeder"],
     });
     if (animal && animal.breeder && currentUser) {
       // animal/product remove from listing
-      await strapi.entityService.update(
-        "api::animal.animal",
-        animal.id,
-        {
-          data: {
-            publishedAt: new Date().toISOString(),
-            isDeleted: true
-          }
-        }
-      );
+      await strapi.entityService.update("api::animal.animal", animal.id, {
+        data: {
+          publishedAt: new Date().toISOString(),
+          isDeleted: true,
+        },
+      });
       strapi.log.info(`current animal: ${JSON.stringify(animal)}`);
       strapi.log.info(`current breeder: ${JSON.stringify(animal.breeder)}`);
-      strapi.log.info(`customer user details: ${JSON.stringify(currentUser)}`)
+      strapi.log.info(`customer user details: ${JSON.stringify(currentUser)}`);
     }
   }
   return createPaymentLog;
-}
+};
 
 // breeder access subscription
-const processBreederSubscription = async (customerEmail: string, payment_status: string, subscription: string, customerId: string) => {
-  const userCustomer = await strapi.db.query("plugin::users-permissions.user").findOne({
-    where: {
-      email: customerEmail
-    },
-    populate: ['breeder']
-  });
+const processBreederSubscription = async (
+  customerEmail: string,
+  payment_status: string,
+  subscription: string,
+  customerId: string
+) => {
+  const userCustomer = await strapi.db
+    .query("plugin::users-permissions.user")
+    .findOne({
+      where: {
+        email: customerEmail,
+      },
+      populate: ["breeder"],
+    });
   if (!userCustomer && userCustomer.isBuyer) return;
-  if (payment_status !== 'paid' || !subscription) return;
+  if (payment_status !== "paid" || !subscription) return;
 
   const updateQuery = {
     where: {
@@ -70,15 +82,15 @@ const processBreederSubscription = async (customerEmail: string, payment_status:
       updatedAt: new Date().toISOString(),
       isSubscribed: true,
       stripeCustomerId: customerId,
-      stripeSubscriptionId: subscription
+      stripeSubscriptionId: subscription,
     },
   };
-  await strapi.db
-    .query("plugin::users-permissions.user")
-    .update(updateQuery);
+  await strapi.db.query("plugin::users-permissions.user").update(updateQuery);
 
-  strapi.log.info(`processing breeder subscritpion: user id: ${userCustomer.id} status: ${payment_status} subscription id: ${subscription}`)
-}
+  strapi.log.info(
+    `processing breeder subscritpion: user id: ${userCustomer.id} status: ${payment_status} subscription id: ${subscription}`
+  );
+};
 
 module.exports = {
   stripeWebhook: async (ctx) => {
@@ -100,42 +112,58 @@ module.exports = {
         process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET_CONNECTED_ACCOUNTS
       );
 
-      // handle stripe events
-      switch (connectedEvent.type) {
-        case "checkout.session.completed":
-          strapi.log.info(
-            `stripe webhook event data: ${JSON.stringify(connectedEvent)}`
-          );
-          const clientEmail = connectedEvent.data.object.customer_details.email;
-          if (clientEmail && connectedEvent.data.object) {
-            const eventData = {
-              email: clientEmail,
-              message: "Stripe checkout payment successful",
-              data: connectedEvent.data.object,
-            };
-
-            io.emit("useCheckoutStripeSuccess", eventData);
-
-            await createStripePaymentLog(connectedEvent.account, connectedEvent.data.object, clientEmail);
-
-            // stripe payment breeder subscription
-            if (eventData.data.payment_link === process.env.BREEDER_SUBSCRIPTION_PLINK) {
-              strapi.log.info(`stripe breeder subscription`);
-              const { subscription, payment_status, customer } = connectedEvent.data.object
-              if (!subscription || !payment_status || !customer) return;
-              await processBreederSubscription(clientEmail, payment_status, subscription, customer);
-            }
-
+      // handle stripe connected account events
+      if (connectedEvent) {
+        switch (connectedEvent.type) {
+          case "checkout.session.completed":
             strapi.log.info(
-              `Emitting stripePaymentSuccess event: ${JSON.stringify(
-                eventData
-              )}`
+              `stripe webhook event data: ${JSON.stringify(connectedEvent)}`
             );
-          }
-          break;
+            const clientEmail =
+              connectedEvent.data.object.customer_details.email;
+            if (clientEmail && connectedEvent.data.object) {
+              const eventData = {
+                email: clientEmail,
+                message: "Stripe checkout payment successful",
+                data: connectedEvent.data.object,
+              };
 
-        default:
-          break;
+              io.emit("useCheckoutStripeSuccess", eventData);
+
+              await createStripePaymentLog(
+                connectedEvent.account,
+                connectedEvent.data.object,
+                clientEmail
+              );
+
+              // stripe payment breeder subscription
+              if (
+                eventData.data.payment_link ===
+                process.env.BREEDER_SUBSCRIPTION_PLINK
+              ) {
+                strapi.log.info(`stripe breeder subscription`);
+                const { subscription, payment_status, customer } =
+                  connectedEvent.data.object;
+                if (!subscription || !payment_status || !customer) return;
+                await processBreederSubscription(
+                  clientEmail,
+                  payment_status,
+                  subscription,
+                  customer
+                );
+              }
+
+              strapi.log.info(
+                `Emitting stripePaymentSuccess event: ${JSON.stringify(
+                  eventData
+                )}`
+              );
+            }
+            break;
+
+          default:
+            break;
+        }
       }
 
       // stripe construct event accounts
@@ -145,39 +173,51 @@ module.exports = {
         process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET
       );
 
-      switch (event.type) {
-        case "checkout.session.completed":
-          strapi.log.info(
-            `stripe webhook event data: ${JSON.stringify(event)}`
-          );
-          const clientEmail = event.data.object.customer_details.email;
-          if (clientEmail && event.data.object) {
-            const eventData = {
-              email: clientEmail,
-              message: "Stripe checkout payment successful",
-              data: event.data.object,
-            };
-
-            // stripe payment breeder subscription
-            if (eventData.data.payment_link === process.env.BREEDER_SUBSCRIPTION_PLINK) {
-              strapi.log.info(`stripe breeder subscription`);
-              const { subscription, payment_status, customer } = event.data.object
-              if (!subscription || !payment_status || !customer) return;
-              await processBreederSubscription(clientEmail, payment_status, subscription, customer);
-            }
-
+      // handle stripe events
+      if (event) {
+        switch (event.type) {
+          case "checkout.session.completed":
             strapi.log.info(
-              `Emitting stripePaymentSuccess event: ${JSON.stringify(
-                eventData
-              )}`
+              `stripe webhook event data: ${JSON.stringify(event)}`
             );
-          }
-          break;
+            const clientEmail = event.data.object.customer_details.email;
+            if (clientEmail && event.data.object) {
+              const eventData = {
+                email: clientEmail,
+                message: "Stripe checkout payment successful",
+                data: event.data.object,
+              };
 
-        default:
-          break;
+              // stripe payment breeder subscription
+              if (
+                eventData.data.payment_link ===
+                process.env.BREEDER_SUBSCRIPTION_PLINK
+              ) {
+                strapi.log.info(`stripe breeder subscription`);
+                const { subscription, payment_status, customer } =
+                  event.data.object;
+                if (!subscription || !payment_status || !customer) return;
+                await processBreederSubscription(
+                  clientEmail,
+                  payment_status,
+                  subscription,
+                  customer
+                );
+              }
+
+              strapi.log.info(
+                `Emitting stripePaymentSuccess event: ${JSON.stringify(
+                  eventData
+                )}`
+              );
+            }
+            break;
+
+          default:
+            break;
+        }
       }
-      
+
       ctx.send({ received: true }); // Send a response to Stripe
     } catch (error) {
       strapi.log.error("Stripe webhook error:", error);
