@@ -44,7 +44,7 @@ module.exports = factories.createCoreController(
       if (currentUser.stripeAccountId && currentUser.stripeAccountLink) {
         const accountLink = await stripe.accountLinks.create({
           account: currentUser.stripeAccountId,
-          refresh_url: "https://example.com/reauth",
+          refresh_url: `${process.env.CLIENT_URL}/breeder/onboarding`,
           return_url: `${process.env.CLIENT_URL}/stripe/success`,
           type: "account_onboarding",
         });
@@ -94,8 +94,8 @@ module.exports = factories.createCoreController(
         // create stripe account link for onboarding (creating payout account)
         const accountLink = await stripe.accountLinks.create({
           account: stripeAccount.id,
-          refresh_url: "https://example.com/reauth",
-          return_url: "https://example.com/return",
+          refresh_url: `${process.env.CLIENT_URL}/breeder/onboarding`,
+          return_url: `${process.env.CLIENT_URL}/stripe/success`,
           type: "account_onboarding",
         });
         if (accountLink) {
