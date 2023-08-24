@@ -94,6 +94,7 @@ const processBreederSubscription = async (
 
 module.exports = {
   stripeWebhook: async (ctx) => {
+    strapi.log.info(`starting stripe webhook account.`);
     try {
       // socket io instance creation
       // const io = require("socket.io")(strapi.server.httpServer, {
@@ -163,6 +164,7 @@ module.exports = {
     }
   },
   stripeWebhookConnectedAccounts: async (ctx) => {
+    strapi.log.info(`starting stripe webhook connected accounts.`);
     try {
       // socket io instance creation
       // const io = require("socket.io")(strapi.server.httpServer, {
