@@ -96,16 +96,6 @@ module.exports = {
   stripeWebhook: async (ctx) => {
     strapi.log.info(`starting stripe webhook account.`);
     try {
-      // socket io instance creation
-      // const io = require("socket.io")(strapi.server.httpServer, {
-      //   cors: {
-      //     origin: "*",
-      //     methods: ["GET", "POST"],
-      //     allowedHeaders: ["my-custom-header"],
-      //     credentials: true,
-      //   },
-      // });
-
       // stripe construct event accounts
       const event = await stripe.webhooks.constructEvent(
         ctx.request.body[unparsed],
@@ -166,16 +156,6 @@ module.exports = {
   stripeWebhookConnectedAccounts: async (ctx) => {
     strapi.log.info(`starting stripe webhook connected accounts.`);
     try {
-      // socket io instance creation
-      // const io = require("socket.io")(strapi.server.httpServer, {
-      //   cors: {
-      //     origin: "*",
-      //     methods: ["GET", "POST"],
-      //     allowedHeaders: ["my-custom-header"],
-      //     credentials: true,
-      //   },
-      // });
-
       // stripe construct event connected accounts
       const connectedEvent = await stripe.webhooks.constructEvent(
         ctx.request.body[unparsed],
@@ -196,8 +176,6 @@ module.exports = {
               message: "Stripe checkout payment successful",
               data: connectedEvent.data.object,
             };
-
-            // io.emit("useCheckoutStripeSuccess", eventData);
 
             await createStripePaymentLog(
               connectedEvent.account,
