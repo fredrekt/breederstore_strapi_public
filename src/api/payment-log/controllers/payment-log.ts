@@ -52,7 +52,28 @@ module.exports = factories.createCoreController("api::payment-log.payment-log", 
                         publishedAt: new Date().toISOString(),
                     }
                 });
-                if (createOrder) paid = true;
+                
+                const { user } = await strapi.entityService.findOne(
+                    "api::breeder.breeder",
+                    ctx.request.body.data.breeder,
+                    {
+                      fields: ["id"],
+                      populate: { user: true },
+                    }
+                );
+
+                if (createOrder && user) {
+                    paid = true;
+                    // manually create notification for order placed
+                    await strapi.entityService.create("api::notification.notification", {
+                    data: {
+                        message: `You have received an order from ${ctx.state.user.username}.`,
+                        type: "order",
+                        user: user,
+                        publishedAt: new Date().toISOString(),
+                    },
+                    });
+                }
             }
         }
         strapi.log.info(`verifying payment: ${JSON.stringify(currentLog)}`);
