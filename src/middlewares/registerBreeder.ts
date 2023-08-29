@@ -64,7 +64,7 @@ module.exports = () => {
       }
       await strapi.plugins["email"].services.email.send({
         to: user.email,
-        from: `My Breeders Store <${process.env.SENDGRID_DEFAULT_FROM}>`, //e.g. single sender verification in SendGrid
+        from: `My Breeders Store <${process.env.SENDGRID_DEFAULT_FROM}>`,
         template_id: user.isBuyer ? process.env.SENDGRID_WELCOME_BUYER_TEMPLATE_ID : process.env.SENDGRID_WELCOME_BREEDER_TEMPLATE_ID,
         dynamic_template_data: dynamicTemplateData 
       });
