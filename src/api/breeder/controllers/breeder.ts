@@ -150,8 +150,8 @@ module.exports = factories.createCoreController(
             breeder_email: ctx.state.user.email || '',
             breeder_bio: updateData.aboutBusiness || '',
             breeder_avatar: currentBreeder.avatar.url || '',
-            approve_link: `https://mybreedersstore-backend-d8d923592f33.herokuapp.com/api/breeder/verify/${currentBreeder.id}/approve`,
-            deny_link: `https://mybreedersstore-backend-d8d923592f33.herokuapp.com/api/breeder/verifiy/${currentBreeder.id}/reject`
+            approve_link: `${process.env.STRAPI_BASE_URL}/api/breeder/verify/${currentBreeder.id}/approve`,
+            deny_link: `${process.env.STRAPI_BASE_URL}/api/breeder/verifiy/${currentBreeder.id}/reject`
           } 
         });
         // delete this initial onboarding 
@@ -236,7 +236,11 @@ module.exports = factories.createCoreController(
         } else {
           return ctx.throw(400, 'Invalid action');
         }
-        ctx.send('<p>Verification successfully processed. This window will close shortly.</p><script>window.setTimeout(function() { window.close(); }, 1500);</script>');
+        ctx.send(`
+          <script>
+              window.location.href = '${process.env.CLIENT_URL}/pending-approval?type=${action}';
+          </script>
+        `);
       } catch (error) {
         strapi.log.error('Error in verifyBreeder:', error.message);
         ctx.throw(500, 'Internal Server Error: Breeder Verification');
