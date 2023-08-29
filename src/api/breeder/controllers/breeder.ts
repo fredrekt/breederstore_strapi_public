@@ -149,7 +149,7 @@ module.exports = factories.createCoreController(
             breeder_phone: ctx.state.user.phone || '',
             breeder_email: ctx.state.user.email || '',
             breeder_bio: updateData.aboutBusiness || '',
-            breeder_avatar: currentBreeder.avatar.url || '',
+            breeder_avatar: currentBreeder.avatar ? currentBreeder.avatar.url : '',
             approve_link: `${process.env.STRAPI_BASE_URL}/api/breeder/verify/${currentBreeder.id}/approve`,
             deny_link: `${process.env.STRAPI_BASE_URL}/api/breeder/verifiy/${currentBreeder.id}/reject`
           } 
