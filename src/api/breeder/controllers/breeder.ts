@@ -150,7 +150,7 @@ module.exports = factories.createCoreController(
             breeder_email: ctx.state.user.email || '',
             breeder_bio: updateData.aboutBusiness || '',
             breeder_avatar: currentBreeder.avatar.url || '',
-            approve_link: `https://mybreedersstore-backend-d8d923592f33.herokuapp.com/api/verify/${currentBreeder.id}/approve`,
+            approve_link: `https://mybreedersstore-backend-d8d923592f33.herokuapp.com/api/breeder/verify/${currentBreeder.id}/approve`,
             deny_link: `https://mybreedersstore-backend-d8d923592f33.herokuapp.com/api/breeder/verifiy/${currentBreeder.id}/reject`
           } 
         });
