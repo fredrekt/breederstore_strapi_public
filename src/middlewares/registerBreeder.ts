@@ -48,11 +48,44 @@ module.exports = () => {
       ctx.response.status === 200
     ) {
       const user = ctx.response.body.user;
+      let dynamicTemplateData: any = {};
+      if (user.isBuyer) {
+        dynamicTemplateData.first_name = user.firstName;
+      } else {
+        const { breeder } = await strapi.entityService.findOne(
+          "plugin::users-permissions.user",
+          user.id,
+          {
+            fields: ["id"],
+            populate: { breeder: true },
+          }
+        );
+        dynamicTemplateData.breeder_name = breeder.businessName;
+      }
       await strapi.plugins["email"].services.email.send({
         to: user.email,
-        from: "My Breeder Store <fredrickjohng98@gmail.com>", //e.g. single sender verification in SendGrid
-        template_id: "d-f00562af97d94931829185143ab96c20",
+        from: `My Breeders Store <${process.env.SENDGRID_DEFAULT_FROM}>`, //e.g. single sender verification in SendGrid
+        template_id: user.isBuyer ? process.env.SENDGRID_WELCOME_BUYER_TEMPLATE_ID : process.env.SENDGRID_WELCOME_BREEDER_TEMPLATE_ID,
+        dynamic_template_data: dynamicTemplateData 
       });
+    }
+    if (ctx.request.url.includes("/api/auth/local") &&
+    ctx.response.status === 200) {
+      const user = ctx.response.body.user;
+      if (!user.isBuyer) {
+        const { breeder } = await strapi.entityService.findOne(
+          "plugin::users-permissions.user",
+          ctx.response.body.user.id,
+          {
+            fields: ["id"],
+            populate: { breeder: true },
+          }
+        );
+        if (breeder) {
+          user.breeder = breeder;
+        }
+      }
+      ctx.response.body.user = user;
     }
   };
 };
