@@ -238,7 +238,9 @@ module.exports = factories.createCoreController(
         }
         ctx.send(`
           <script>
+            setTimeout(() => {
               window.location.href = '${process.env.CLIENT_URL}/pending-approval?type=${action}';
+            }, 10)
           </script>
         `);
       } catch (error) {
