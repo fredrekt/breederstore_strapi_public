@@ -236,13 +236,7 @@ module.exports = factories.createCoreController(
         } else {
           return ctx.throw(400, 'Invalid action');
         }
-        ctx.send(`
-          <script>
-            setTimeout(() => {
-              window.location.href = '${process.env.CLIENT_URL}/pending-approval?type=${action}';
-            }, 10)
-          </script>
-        `);
+        ctx.redirect(`${process.env.CLIENT_URL}/pending-approval?type=${action}`);
       } catch (error) {
         strapi.log.error('Error in verifyBreeder:', error.message);
         ctx.throw(500, 'Internal Server Error: Breeder Verification');
